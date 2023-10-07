@@ -1,6 +1,8 @@
 # PINC
-This repository contains the official Pytorch implementation for the NeurIPS 2023 paper "$p$-Poisson surface reconstruction in irrotational flow from point clouds"
+This repository contains the official Pytorch implementation for the NeurIPS 2023 paper "p-Poisson surface reconstruction in irrotational flow from point clouds"
+
 by Yesom Park, Taekyung Lee, Jooyoung Hahn, and Myungjoo Kang
+
 
 ![image](https://github.com/Yebbi/PINC/assets/82932461/f90e9fa4-6bb7-4eec-af56-7599c8fbf314)
 
