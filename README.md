@@ -1,4 +1,6 @@
-This repository contains the official Pytorch implementation for the **NeurIPS 2023 paper "p-Poisson surface reconstruction in irrotational flow from point clouds"**
+# p-Poisson surface reconstruction in curl-free flow from point clouds
+
+This repository contains the official Pytorch implementation for the **NeurIPS 2023 paper "p-Poisson surface reconstruction in curl-free flow from point clouds"**
 
 by Yesom Park, Taekyung Lee, Jooyoung Hahn, and Myungjoo Kang
 
