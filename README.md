@@ -31,7 +31,13 @@ To **train** the model from scratch, simply run the following command
 
 ```
 python reconstruction/run.py
+  --config: Training configuration
+  --expname: The folder name for storing evaluation results
+    (default: 'single_shape')
 ```
+* `config` is the path to the config file. The prescribed config files are provided as `setup.conf` in `./reconstruction` andt he default configurations are provided.
+
+* When trained, the model is saved in a folder `exps` in your workdir. `expname` is the name of a subfolder in `exps` that stores the results.
 
 To **evaluate** a trained model on an epoch EPOCH, use the following
 
