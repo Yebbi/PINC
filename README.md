@@ -15,5 +15,29 @@ Moreover, in order to improve the accuracy of the reconstruction, a constraint f
 All combined, we achieved superior and robust reconstruction only from point clouds without an7 priori knowledge of the surface normal at the data points.
 
 
+## How to run the code
+
+### Dependencies
+This code is developed with Python3. PyTorch >=1.8 (we recommend 1.10.0). First, install the dependencies by running the following to install a subset of the required Python packages in place
+```
+pip install -r requirements.txt
+```
+
+### Usage
+
+Train and evaluate our model through `reconstruction/run.py`
+
+To **train** the model from scratch, simply run the following command
+
+```
+python reconstruction/run.py
+```
+
+To **evaluate** a trained model on an epoch EPOCH, use the following
+
+```
+python reconstruction/run.py --eval --checkpoint EPOCH
+```
+
 
 
