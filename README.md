@@ -4,7 +4,7 @@ This repository contains the official Pytorch implementation for the **NeurIPS 2
 by Yesom Park, Taekyung Lee, Jooyoung Hahn, and Myungjoo Kang
 
 <p align="center">
-  <img src="https://github.com/Yebbi/PINC/assets/82932461/d10f8e4c-bd84-4cd2-8d69-5f6a6ab0c8c9" />
+  <img src="https://github.com/Yebbi/PINC/assets/82932461/b4ccb89c-2112-4c5b-b0e5-5b416ddb937d" />
 </p>
 
 <p align="center">
