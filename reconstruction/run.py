@@ -399,7 +399,7 @@ if __name__ == '__main__':
     parser.add_argument('--auggrad', type=bool, default = True)
     parser.add_argument('--regularizer_coord', type=float, nargs='+',default = [0.1, 0.0001, 0.0005, 0.1] )
     parser.add_argument('--otherdir', default = False, action='store_true')
-    parser.add_argument('--epsilon', type= float, default = 1)
+    parser.add_argument('--epsilon', type= float, default = 0.1) # In the paper, we report results from experiments with epsilon=1. However, after the submission, we found that epsilon=0.1 generally works better for various geometries.
 
     args = parser.parse_args()
 
