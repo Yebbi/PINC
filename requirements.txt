@@ -1,0 +1,7 @@
+scikit-image==0.18.0
+scipy==1.9.3
+open3d==0.14.1
+GPUtil==1.4.0
+argparse==1.1
+trimesh==3.20.1
+plotly==5.13.0
