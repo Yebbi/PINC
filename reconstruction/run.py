@@ -56,13 +56,13 @@ class ReconstructionRunner:
                 print('plot validation epoch: ', epoch)
                 self.plot_shapes(epoch)
 
-            # change back to train mode
+            # Change back to train mode
             self.network.train()
             self.adjust_learning_rate(epoch)
         
             nonmnfld_pnts = self.sampler.get_points(mnfld_pnts.unsqueeze(0), mnfld_sigma.unsqueeze(0)).squeeze()
 
-            ## forward pass
+            ## Forward pass
             mnfld_outputs = self.network(mnfld_pnts, return_grad=True, return_auggrad=self.auggrad)
             nonmnfld_outputs = self.network(nonmnfld_pnts, return_grad=True, return_auggrad=self.auggrad)
 
@@ -73,22 +73,21 @@ class ReconstructionRunner:
             nonmnfld_G = nonmnfld_outputs["grad_pred"]
             nonmnfld_G_tilde = nonmnfld_outputs['auggrad_pred']
 
-            ## compute grad
+            ## Compute grad
             mnfld_grad = gradient(mnfld_pnts, mnfld_pred)
             nonmnfld_grad = gradient(nonmnfld_pnts, nonmnfld_pred)
 
-            ## manifold loss
+            ## Manifold loss
             mnfld_loss = (mnfld_pred.abs()).mean()
 
-            ## gradient matching loss
+            ## Gradient Matching loss
             grad_loss = (((nonmnfld_grad - nonmnfld_G).norm(2, dim=-1)** 2).mean()*nonmnfld_pnts.shape[0] + ((mnfld_grad - mnfld_G).norm(2, dim=-1)** 2).mean()*mnfld_pnts.shape[0])/(nonmnfld_pnts.shape[0]+mnfld_pnts.shape[0])
             
-            ## Area loss
-            
+            ## Minimal Area loss
             area_loss = ((utils.bumpft(nonmnfld_pred,epsilon=self.epsilon)*((nonmnfld_grad).norm(2, dim=-1))).mean()*nonmnfld_pnts.shape[0]+ (utils.bumpft(mnfld_pred, epsilon=self.epsilon)*((mnfld_grad).norm(2, dim=-1))).mean()*mnfld_pnts.shape[0])/(nonmnfld_pnts.shape[0]+mnfld_pnts.shape[0])
             
             if self.regularizer_type == 'none':
-                loss = mnfld_loss + 0.5*(grad_loss)
+                loss = mnfld_loss + self.regularizer_coord[0]*grad_loss
                 
                 # back propagation
                 self.optimizer.zero_grad()
@@ -102,27 +101,27 @@ class ReconstructionRunner:
                 H1 = gradient(mnfld_pnts, mnfld_G_tilde[:,0])
                 H2 = gradient(mnfld_pnts, mnfld_G_tilde[:,1])
                 H3 = gradient(mnfld_pnts, mnfld_G_tilde[:,2])
-                curlV_x = H3[:,1] - H2[:,2]
-                curlV_y = H1[:,2] - H3[:,0]
-                curlV_z = H2[:,0] - H1[:,1]
-                curl_loss_mnfld = (curlV_x**2 + curlV_y**2 + curlV_z**2).mean()
-                del H1, H2, H3, curlV_x, curlV_y, curlV_z
+                curlG_x = H3[:,1] - H2[:,2]
+                curlG_y = H1[:,2] - H3[:,0]
+                curlG_z = H2[:,0] - H1[:,1]
+                curl_loss_mnfld = (curlG_x**2 + curlG_y**2 + curlG_z**2).mean()
+                del H1, H2, H3, curlG_x, curlG_y, curlG_z
                 
                 H1 = gradient(nonmnfld_pnts, nonmnfld_G_tilde[:,0])
                 H2 = gradient(nonmnfld_pnts, nonmnfld_G_tilde[:,1])
                 H3 = gradient(nonmnfld_pnts, nonmnfld_G_tilde[:,2])
-                curlV_x = H3[:,1] - H2[:,2]
-                curlV_y = H1[:,2] - H3[:,0]
-                curlV_z = H2[:,0] - H1[:,1]
-                curl_loss_nonmnfld = (curlV_x**2 + curlV_y**2 + curlV_z**2).mean()
-                del H1, H2, H3, curlV_x, curlV_y, curlV_z
+                curlG_x = H3[:,1] - H2[:,2]
+                curlG_y = H1[:,2] - H3[:,0]
+                curlG_z = H2[:,0] - H1[:,1]
+                curl_loss_nonmnfld = (curlG_x**2 + curlG_y**2 + curlG_z**2).mean()
+                del H1, H2, H3, curlG_x, curlG_y, curlG_z
                 
                 curl_loss = (curl_loss_mnfld*mnfld_pnts.shape[0] + curl_loss_nonmnfld*nonmnfld_pnts.shape[0]) /(nonmnfld_pnts.shape[0]+mnfld_pnts.shape[0])
                 
-                # V_matching
-                V_matching = (((nonmnfld_G_tilde - nonmnfld_G).norm(2, dim=-1)** 2).mean()*nonmnfld_pnts.shape[0] + ((mnfld_G_tilde - mnfld_G).norm(2, dim=-1)** 2).mean()*mnfld_pnts.shape[0])/(nonmnfld_pnts.shape[0]+mnfld_pnts.shape[0])
+                # Matching two auxiliary variables
+                G_matching = (((nonmnfld_G_tilde - nonmnfld_G).norm(2, dim=-1)** 2).mean()*nonmnfld_pnts.shape[0] + ((mnfld_G_tilde - mnfld_G).norm(2, dim=-1)** 2).mean()*mnfld_pnts.shape[0])/(nonmnfld_pnts.shape[0]+mnfld_pnts.shape[0])
 
-                loss = mnfld_loss + self.regularizer_coord[0]*grad_loss + self.regularizer_coord[1]*(V_matching) + self.regularizer_coord[2]*curl_loss + self.regularizer_coord[3]* area_loss
+                loss = mnfld_loss + self.regularizer_coord[0]*grad_loss + self.regularizer_coord[1]*(G_matching) + self.regularizer_coord[2]*curl_loss + self.regularizer_coord[3]* area_loss
                 
                 # back propagation
                 self.optimizer.zero_grad()
@@ -131,6 +130,7 @@ class ReconstructionRunner:
                 
                 tmp = curl_loss.item()
 
+            
             if epoch % self.conf.get_int('train.status_frequency') == 0:
                 print('Train Epoch: [{}/{} ({:.0f}%)] Train Loss: {:.6f}\tManifold loss: {:.6f}'
                     '\tGrad loss: {:.6f}' '\tArea loss: {:.6f}' '\t {} loss: {:.6f}' '\tV_matching: {:.6f}'.format(
@@ -151,7 +151,7 @@ class ReconstructionRunner:
                     loss.item(), mnfld_loss.item(), grad_loss.item(), area_loss.item(),self.regularizer_type, tmp, V_matching.item()))
                 f.close()
                     
-            del cur_data, mnfld_pnts, nonmnfld_pnts, indices, mnfld_sigma, mnfld_pred, nonmnfld_pred, nonmnfld_G, nonmnfld_grad, mnfld_loss, grad_loss, loss, tmp, area_loss, mnfld_grad, mnfld_G, nonmnfld_G_tilde, V_matching, curl_loss, curl_loss_nonmnfld, curl_loss_mnfld
+            del cur_data, mnfld_pnts, nonmnfld_pnts, indices, mnfld_sigma, mnfld_pred, nonmnfld_pred, nonmnfld_G, nonmnfld_grad, mnfld_loss, grad_loss, loss, tmp, area_loss, mnfld_grad, mnfld_G, nonmnfld_G_tilde, G_matching, curl_loss, curl_loss_nonmnfld, curl_loss_mnfld
         
     def plot_shapes(self, epoch, path=None):
         # plot network validation shapes
@@ -395,7 +395,7 @@ if __name__ == '__main__':
     parser.add_argument('--timestamp', default='latest', type=str)
     parser.add_argument('--checkpoint', default='0', type=str)
     parser.add_argument('--eval', default=False, action="store_true")
-    parser.add_argument('--regularizer_type', type=str, default = 'curl', help='none/curvature/curl')
+    parser.add_argument('--regularizer_type', type=str, default = 'curl', help='none/curl')
     parser.add_argument('--auggrad', type=bool, default = True)
     parser.add_argument('--regularizer_coord', type=float, nargs='+',default = [0.1, 0.0001, 0.0005, 0.1] )
     parser.add_argument('--otherdir', default = False, action='store_true')
