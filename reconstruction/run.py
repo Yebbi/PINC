@@ -114,7 +114,6 @@ class ReconstructionRunner:
             elif self.regularizer_type == 'none':
                 curl_loss = torch.zeros(1)
                 G_matching = torch.zeros(1)
-                loss = mnfld_loss + self.regularizer_coord[0]*grad_loss + self.regularizer_coord[3]* area_loss
 
             
             loss = mnfld_loss + self.regularizer_coord[0]*grad_loss + self.regularizer_coord[1]*(G_matching) + self.regularizer_coord[2]*curl_loss + self.regularizer_coord[3]* area_loss
