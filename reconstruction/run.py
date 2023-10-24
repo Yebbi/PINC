@@ -85,18 +85,8 @@ class ReconstructionRunner:
             
             ## Minimal Area loss
             area_loss = ((utils.bumpft(nonmnfld_pred,epsilon=self.epsilon)*((nonmnfld_grad).norm(2, dim=-1))).mean()*nonmnfld_pnts.shape[0]+ (utils.bumpft(mnfld_pred, epsilon=self.epsilon)*((mnfld_grad).norm(2, dim=-1))).mean()*mnfld_pnts.shape[0])/(nonmnfld_pnts.shape[0]+mnfld_pnts.shape[0])
-            
-            if self.regularizer_type == 'none':
-                loss = mnfld_loss + self.regularizer_coord[0]*grad_loss
-                
-                # back propagation
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-                
-                tmp = 0.
-            
-            elif self.regularizer_type == 'curl':
+                      
+            if self.regularizer_type == 'curl':
                 # Curl loss
                 H1 = gradient(mnfld_pnts, mnfld_G_tilde[:,0])
                 H2 = gradient(mnfld_pnts, mnfld_G_tilde[:,1])
@@ -120,38 +110,40 @@ class ReconstructionRunner:
                 
                 # Matching two auxiliary variables
                 G_matching = (((nonmnfld_G_tilde - nonmnfld_G).norm(2, dim=-1)** 2).mean()*nonmnfld_pnts.shape[0] + ((mnfld_G_tilde - mnfld_G).norm(2, dim=-1)** 2).mean()*mnfld_pnts.shape[0])/(nonmnfld_pnts.shape[0]+mnfld_pnts.shape[0])
-
-                loss = mnfld_loss + self.regularizer_coord[0]*grad_loss + self.regularizer_coord[1]*(G_matching) + self.regularizer_coord[2]*curl_loss + self.regularizer_coord[3]* area_loss
-                
-                # back propagation
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-                
-                tmp = curl_loss.item()
+            
+            elif self.regularizer_type == 'none':
+                curl_loss = torch.zeros(1)
+                G_matching = torch.zeros(1)
+                loss = mnfld_loss + self.regularizer_coord[0]*grad_loss + self.regularizer_coord[3]* area_loss
 
             
+            loss = mnfld_loss + self.regularizer_coord[0]*grad_loss + self.regularizer_coord[1]*(G_matching) + self.regularizer_coord[2]*curl_loss + self.regularizer_coord[3]* area_loss
+                
+            # back propagation
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()    
             if epoch % self.conf.get_int('train.status_frequency') == 0:
                 print('Train Epoch: [{}/{} ({:.0f}%)] Train Loss: {:.6f}\tManifold loss: {:.6f}'
-                    '\tGrad loss: {:.6f}' '\tArea loss: {:.6f}' '\t {} loss: {:.6f}' '\tV_matching: {:.6f}'.format(
+                    '\tGrad loss: {:.6f}' '\tArea loss: {:.6f}' '\t {} loss: {:.6f}' '\tG_matching: {:.6f}'.format(
                     epoch, self.nepochs, 100. * epoch / self.nepochs,
-                    loss.item(), mnfld_loss.item(), grad_loss.item(), area_loss.item(), self.regularizer_type, tmp, V_matching.item()))
+                    loss.item(), mnfld_loss.item(), grad_loss.item(), area_loss.item(), self.regularizer_type, tmp, G_matching.item()))
                 
                 write.add_scalar("Train loss", loss.item(), epoch)
                 write.add_scalar("Manifold loss", mnfld_loss.item(), epoch)
                 write.add_scalar("Grad loss", grad_loss.item(), epoch)
                 write.add_scalar("Area_loss",  area_loss.item(), epoch)
                 write.add_scalar("{} loss".format(self.regularizer_type), tmp, epoch)
-                write.add_scalar("V_matching", V_matching.item(), epoch)
+                write.add_scalar("G_matching", G_matching.item(), epoch)
                 write.add_scalar("learning rate", self.optimizer.param_groups[0]['lr'], epoch)
                 f = open(f'{self.cur_exp_dir}/logs.txt', 'a')
                 f.write('Train Epoch: [{}/{} ({:.0f}%)] Train Loss: {:.6f}\tManifold loss: {:.6f}'
-                    '\tGrad loss: {:.6f}' '\tArea loss: {:.6f}' '\t {} loss: {:.6f}' '\tV_matching: {:.6f}\n'.format(
+                    '\tGrad loss: {:.6f}' '\tArea loss: {:.6f}' '\t {} loss: {:.6f}' '\tG_matching: {:.6f}\n'.format(
                     epoch, self.nepochs, 100. * epoch / self.nepochs,
-                    loss.item(), mnfld_loss.item(), grad_loss.item(), area_loss.item(),self.regularizer_type, tmp, V_matching.item()))
+                    loss.item(), mnfld_loss.item(), grad_loss.item(), area_loss.item(),self.regularizer_type, curl_loss.item(), G_matching.item()))
                 f.close()
                     
-            del cur_data, mnfld_pnts, nonmnfld_pnts, indices, mnfld_sigma, mnfld_pred, nonmnfld_pred, nonmnfld_G, nonmnfld_grad, mnfld_loss, grad_loss, loss, tmp, area_loss, mnfld_grad, mnfld_G, nonmnfld_G_tilde, G_matching, curl_loss, curl_loss_nonmnfld, curl_loss_mnfld
+            del cur_data, mnfld_pnts, nonmnfld_pnts, indices, mnfld_sigma, mnfld_pred, nonmnfld_pred, nonmnfld_G, nonmnfld_grad, mnfld_loss, grad_loss, loss, area_loss, mnfld_grad, mnfld_G, nonmnfld_G_tilde, G_matching, curl_loss, curl_loss_nonmnfld, curl_loss_mnfld
         
     def plot_shapes(self, epoch, path=None):
         # plot network validation shapes
