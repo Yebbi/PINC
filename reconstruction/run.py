@@ -126,13 +126,13 @@ class ReconstructionRunner:
                 print('Train Epoch: [{}/{} ({:.0f}%)] Train Loss: {:.6f}\tManifold loss: {:.6f}'
                     '\tGrad loss: {:.6f}' '\tArea loss: {:.6f}' '\t {} loss: {:.6f}' '\tG_matching: {:.6f}'.format(
                     epoch, self.nepochs, 100. * epoch / self.nepochs,
-                    loss.item(), mnfld_loss.item(), grad_loss.item(), area_loss.item(), self.regularizer_type, tmp, G_matching.item()))
+                    loss.item(), mnfld_loss.item(), grad_loss.item(), area_loss.item(), self.regularizer_type, curl_loss.item(), G_matching.item()))
                 
                 write.add_scalar("Train loss", loss.item(), epoch)
                 write.add_scalar("Manifold loss", mnfld_loss.item(), epoch)
                 write.add_scalar("Grad loss", grad_loss.item(), epoch)
                 write.add_scalar("Area_loss",  area_loss.item(), epoch)
-                write.add_scalar("{} loss".format(self.regularizer_type), tmp, epoch)
+                write.add_scalar("{} loss".format(self.regularizer_type), curl_loss.item(), epoch)
                 write.add_scalar("G_matching", G_matching.item(), epoch)
                 write.add_scalar("learning rate", self.optimizer.param_groups[0]['lr'], epoch)
                 f = open(f'{self.cur_exp_dir}/logs.txt', 'a')
