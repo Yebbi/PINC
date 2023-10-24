@@ -80,7 +80,7 @@ class ReconstructionRunner:
             ## Manifold loss
             mnfld_loss = (mnfld_pred.abs()).mean()
 
-            ## Gradient Matching loss
+            ## Gradient Matching loss (L2 penalty term for the constraint G=\nabla u)
             grad_loss = (((nonmnfld_grad - nonmnfld_G).norm(2, dim=-1)** 2).mean()*nonmnfld_pnts.shape[0] + ((mnfld_grad - mnfld_G).norm(2, dim=-1)** 2).mean()*mnfld_pnts.shape[0])/(nonmnfld_pnts.shape[0]+mnfld_pnts.shape[0])
             
             ## Minimal Area loss
